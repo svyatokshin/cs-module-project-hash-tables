@@ -23,7 +23,10 @@ class HashTable:
 
     def __init__(self, capacity):
         # Your code here
-        self.capacity = MIN_CAPACITY
+        if capacity < MIN_CAPACITY:
+            self.capacity = MIN_CAPACITY
+        else:
+            self.capacity = capacity
         self.data = [None] * self.capacity
 
     def get_num_slots(self):
@@ -37,7 +40,8 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        return self.capacity
+        # return self.capacity
+        return len(self.data)
 
     def get_load_factor(self):
         """
@@ -53,22 +57,65 @@ class HashTable:
         FNV-1 Hash, 64-bit
 
         Implement this, and/or DJB2.
+
+        := means "set left variable equal to right side"
+
+        Python < 3.4 uses FNV
         """
 
         # Your code here
+        FNV_offset_basis = 14695981039346656037
+        FNV_prime = 1099511628211
+
+        # algorithm fnv-1 is
+        # hash := FNV_offset_basis do
+        hashed_result = FNV_offset_basis
+        key_bytes = key.encode()
+        # for each byte_of_data to be hashed
+        for byte in key_bytes:
+            #     hash := hash × FNV_prime
+            hashed_result = hashed_result * FNV_prime
+        #     hash := hash XOR byte_of_data
+            hashed_result = hashed_result ^ byte
+
+        # return hash
+        return hashed_result
 
     def djb2(self, key):
         """
         DJB2 hash, 32-bit
 
         Implement this, and/or FNV-1.
-        """
-        # Your code here
-        hash = 5381
 
-        for c in key:
-            hash = (hash * 33) + ord(c)
-        return hash
+        # Your code here
+    {
+        unsigned long hash = 5381;
+        int c;
+
+        while (c = *str++)
+            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+        return hash;
+    }
+    """
+        # Pseudo Code
+        # make a variable equal to 5381
+        hashed_result = 5381
+        # iterate over the bytes of our key
+        key_bytes = key.encode()
+        # for each byte,
+        for byte in key_bytes:
+            # shift the variable and add it and add the byte
+            hashed_result = ((hashed_result << 5) + hashed_result) + byte
+            # the << 5 adds 5 0's in binary, helps create a super random number
+
+        return hashed_result
+
+        # hash = 5381
+
+        # for c in key:
+        #     hash = (hash * 33) + ord(c)
+        # return hash
 
     def hash_index(self, key):
         """
@@ -76,7 +123,7 @@ class HashTable:
         between within the storage capacity of the hash table.
         """
         # return self.fnv1(key) % self.capacity
-        return self.djb2(key) % len(self.data)
+        return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -87,7 +134,10 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        # 1. Hash the key
+        # 2. Take the hash and mod it with len of array
         idx = self.hash_index(key)
+        # 3. Go to index and put in value
         self.data[idx] = value
 
     def delete(self, key):
@@ -99,12 +149,17 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        if key:
-            idx = self.hash_index(key)
-            self.data[idx] = None
-            return
-        else:
-            print("No such value exists")
+        # find index for given key
+        idx = self.hash_index(key)
+        # assign data back to None
+        self.data[idx] = None
+
+        # if key:
+        #     idx = self.hash_index(key)
+        #     self.data[idx] = None
+        #     return
+        # else:
+        #     print("No such value exists")
 
     def get(self, key):
         """
@@ -115,6 +170,10 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        # 1. Hash the key
+        # 2. Take the has and mod it with the len of array
+        # 3. Go to index and get out the value
+
         if key:
             idx = self.hash_index(key)
             value = self.data[idx]
