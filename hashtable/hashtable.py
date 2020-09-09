@@ -23,11 +23,13 @@ class HashTable:
 
     def __init__(self, capacity):
         # Your code here
+
         if capacity < MIN_CAPACITY:
             self.capacity = MIN_CAPACITY
         else:
             self.capacity = capacity
         self.data = [None] * self.capacity
+        self.items = 0
 
     def get_num_slots(self):
         """
@@ -50,7 +52,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        pass
+        return self.items / self.capacity
 
     def fnv1(self, key):
         """
@@ -136,9 +138,30 @@ class HashTable:
         # Your code here
         # 1. Hash the key
         # 2. Take the hash and mod it with len of array
+
         idx = self.hash_index(key)
+        # 3. Check if there's a value at that index
+        # Check if the key is already in our linked list
+        node = self.data[idx]  # this is the head
+
+        while node is not None:
+            if node.key == key:
+                # If so, overwrite that value
+                self.data[idx] = HashTableEntry(key, value)
+            elif node.next == None:
+                node.next = HashTableEntry(key, value)
+                break
+            node = node.next
+
+        if node is None:
+            self.data[idx] = HashTableEntry(key, value)
+            self.items += 1
+
+            # If not, add a node to the head of of the linked list
+        if self.get_load_factor() > 0.7:
+            self.resize(self.capacity*2)
+
         # 3. Go to index and put in value
-        self.data[idx] = value
 
     def delete(self, key):
         """
@@ -152,7 +175,7 @@ class HashTable:
         # find index for given key
         idx = self.hash_index(key)
         # assign data back to None
-        self.data[idx] = None
+        # self.data[idx] = None
 
         # if key:
         #     idx = self.hash_index(key)
@@ -160,6 +183,26 @@ class HashTable:
         #     return
         # else:
         #     print("No such value exists")
+
+        node = self.data[idx]
+        if node is None:
+            print("warning")
+            return
+        if node.key == key:
+            self.data[idx] = node.next
+            self.items -= 1
+            return
+        prev = node
+        node = node.next
+        while node is not None:
+            if node.key == key:
+                prev.next = node.next
+                self.items -= 1
+                break
+            prev = node
+            node = node.next
+        if self.get_load_factor() < 0.2:
+            self.resize(self.capacity//2)
 
     def get(self, key):
         """
@@ -174,12 +217,12 @@ class HashTable:
         # 2. Take the has and mod it with the len of array
         # 3. Go to index and get out the value
 
-        if key:
-            idx = self.hash_index(key)
-            value = self.data[idx]
-            return value
-        else:
-            return None
+        idx = self.hash_index(key)
+        node = self.data[idx]
+        while node is not None:
+            if node.key == key:
+                return node.value
+            node = node.next
 
     def resize(self, new_capacity):
         """
@@ -189,7 +232,19 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        self.capacity = new_capacity
+        # self.capacity = new_capacity
+        if new_capacity < MIN_CAPACITY:
+            self.capacity = MIN_CAPACITY
+        else:
+            self.capacity = new_capacity
+
+        old = self.data
+        self.data = [None] * self.capacity
+        self.items = 0
+        for node in old:
+            while node:
+                self.put(node.key, node.value)
+                node = node.next
 
 
 if __name__ == "__main__":
